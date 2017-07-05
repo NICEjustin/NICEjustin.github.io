@@ -173,8 +173,15 @@
                     }
                 }
                 document.onkeydown = function (e) {
+                    console.log(e.keyCode);
                     if (flag && e.keyCode == 38) {
                         drawBird.birdSpeed = -0.2;
+                    }
+                    if(!flag && e.keyCode == 13){
+                        flag = true;
+                        endT = Date.now();
+                        gameStart = Date.now();
+                        flyBird();
                     }
                 }
             })
