@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel='icon' href='./images/favicon.ico' type='image/x-icon' />
+    <title>带你飞</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        canvas {
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="paint" width="800" height="600"></canvas>
+    <script src="./js/index.js"></script>
+    <script>
+        //获取画布
+        var canvas = document.querySelector("#paint");
+
+        if (canvas.getContext) {
+            var ctx = canvas.getContext("2d");
+            //设置初始数据
+            {
+                var images = ["birds", "sky", "land", "pipe1", "pipe2"];
+                var startT = 0;
+                var endT = Date.now();
+                var offsetT = 0;
+                var gameStart = Date.now();
+                var flag = false;
+            }
+
+
+            loadImage(images, function (imgList) {
+                //获取加载的图片对象
+                {
+                    var birdImg = imgList['birds'];
+                    var skyImg = imgList['sky'];
+                    var landImg = imgList['land'];
+                    var topImg = imgList['pipe2'];
+                    var bottomImg = imgList['pipe1'];
+                }
+
+                //创建素材对象
+                var drawSky1 = new Sky({
+                    ctx: ctx,
+                    skyImg: skyImg,
+                    x: 0
+                })
+                var drawSky2 = new Sky({
+                    ctx: ctx,
+                    skyImg: skyImg,
+                    x: canvas.width
+                })
+
+                var drawBird = new Bird({
+                    ctx: ctx,
+                    birdImg: birdImg,
+                    canvasX: 100,
+                    canvasY: 100
+                })
+
+                var pipeArr = [];
+                for (var i = 0; i < 6; i++) {
+                    var drawPipe = new Pipe({
+                        ctx: ctx,
+                        topImg: topImg,
+                        bottomImg: bottomImg,
+                        x: 300 + i * 3 * topImg.width,
+
+                    });
+                    pipeArr.push(drawPipe);
+                }
+
+                var landArr = [];
+                for (var i = 0; i < 4; i++) {
+                    var drawLand = new Land({
+                        ctx: ctx,
+                        landImg: landImg,
+                        x: i * landImg.width,
+                        y: canvas.height - landImg.height
+                    });
+                    landArr.push(drawLand);
+                }
+
+                //绘制素材到画布
+                function flyBird() {
+                    startT = Date.now();
+                    offsetT = startT - endT;
+                    endT = startT;
+
+                    ctx.beginPath();
+                    // ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    drawSky1.draw();
+                    drawSky2.draw();
+
+                    drawBird.draw(offsetT);
+
+                    for (var i = 0; i < pipeArr.length; i++) {
+                        pipeArr[i].draw();
+                    }
+
+                    for (var i = 0; i < landArr.length; i++) {
+                        landArr[i].draw()
+                    }
+                    //游戏时间
+                    var runningT = new SetTime({
+                        ctx: ctx,
+                        gameStart: gameStart
+                    })
+
+
+                    if (drawBird.canvasY < 0 || drawBird.canvasY > canvas.height - landImg.height - birdImg.height) {
+                        flag = false;
+                        startT = 0;
+                        endT = Date.now();
+                        offsetT = 0;
+                        gameStart = Date.now();
+                        drawBird.canvasY = 100;
+                        drawBird.birdSpeed = 0;
+                        drawBird.birdIndex = 0;
+                        for (var i = 0; i < pipeArr.length; i++) {
+                            pipeArr[i].x = 300 + i * 3 * topImg.width;
+                            pipeArr[i].getY();
+                        }
+                        startText("重新开始");
+                        return;
+                    }
+                    if (ctx.isPointInPath(drawBird.canvasX + drawBird.birdImgW / 2, drawBird.canvasY + drawBird
+                            .birdImgH /
+                            2)) {
+                        flag = false;
+                        startT = 0;
+                        endT = Date.now();
+                        offsetT = 0;
+                        gameStart = Date.now();
+                        drawBird.canvasY = 100;
+                        drawBird.birdSpeed = 0;
+                        drawBird.birdIndex = 0;
+                        for (var i = 0; i < pipeArr.length; i++) {
+                            pipeArr[i].x = 300 + i * 3 * topImg.width;
+                            pipeArr[i].getY();
+                        }
+                        startText("重新开始");
+                        return;
+                    }
+
+                    if (!flag) {
+                        startText("开始游戏");
+                    }
+
+                    if (flag) {
+                        window.requestAnimationFrame(flyBird);
+                    }
+
+                }
+                flyBird();
+                //添加点击事件--游戏控制
+                canvas.onclick = function () {
+                    if (!flag) {
+                        flag = true;
+                        endT = Date.now();
+                        gameStart = Date.now();
+                        flyBird();
+                    } else {
+                        drawBird.birdSpeed = -0.2;
+                    }
+                }
+                document.onkeydown = function (e) {
+                    if (flag && e.keyCode == 38) {
+                        drawBird.birdSpeed = -0.2;
+                    }
+                }
+            })
+        }
+    </script>
+</body>
+
+</html>
