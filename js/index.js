@@ -38,7 +38,7 @@ function Bird(option) {
     this.maxSpeed = 0.45;
 }
 Bird.prototype = {
-    constructor: Sky,
+    constructor: Bird,
     draw: function (offsetT) {
         this.birdX = this.birdIndex * this.birdImgW;
         this.birdSpeed = this.birdSpeed + this.g * offsetT;
